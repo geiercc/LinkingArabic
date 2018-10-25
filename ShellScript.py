@@ -34,6 +34,7 @@ public class ShellScript {
                placeholder = input.nextLine();
                output.println(line);
             }
+            placeholder = input.nextLine();
             String arabicString = placeholder.substring(placeholder.indexOf(">") + 1, placeholder.indexOf("</"));
             replace(replaceInput, replaceLinks, arabicString); 
          }
