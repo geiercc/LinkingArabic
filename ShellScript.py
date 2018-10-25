@@ -1,3 +1,7 @@
+// This program scans through a diary links file and Arabic translations file and creates
+// a new edited links file. New version includes tooltip code that contains the translations
+// for each unique id.
+
 import java.util.*;
 import java.io.*;
 
@@ -8,51 +12,53 @@ public class ShellScript {
       File diaryFile = new File("Diary_50_20160719_links.html");
       Scanner diaryScanner = new Scanner(diaryFile);
    
-      PrintStream idList = new PrintStream("D50_id list.html");
-      
-      PrintStream output = new PrintStream("D50_diary.html");
-      PrintStream links = new PrintStream("D50_links.html");
-      findAndReplace(arabicScanner, idList, output);
-      replace(diaryScanner, links);
+      PrintStream links = new PrintStream("D50_links(3).html");
+      Map<String, String> translations = createMap(arabicScanner);
+      editDoc(diaryScanner, links, translations);
    }
-	// scan through file to find ID-cell from given diary file
-	// copies ID A50_... from something like: <td class="ID-cell">A50_004_02:002</td>
-	// forms new string that looks like: <td class="ID-cell"> <a id="A50_004_01:001"></a> A50_004_01:001</td>
-   // parameters:
-   //    input - diary file 
-   //    idList - output file for list of new IDs
-   //    output - output file for replaced code for html file
-   public static void findAndReplace(Scanner input, PrintStream idList, PrintStream output) {
+   
+   // Creates a map with the keys as the IDs of each translation, and the values as the English
+   // translation of the Arabic document. Assumes each ID is unique (so no duplicates).
+   // parameter(s) needed:
+   //    input = the Arabic document file scanner
+   public static Map<String, String> createMap(Scanner input) {
+      Map<String, String> idToTrans = new TreeMap<String, String>(); // [A50_..]=English translation
       while (input.hasNextLine()) {
          String line = input.nextLine();
          String result = "<td class=\"ID-cell\"> <a id=\"";
          if (line.contains("<td class=\"ID-cell\">A50")) {
-            String id = line.substring(line.indexOf(">") + 1, line.indexOf("</"));
-            result += id + "\"></a> " + id + "</td>";
-               
-            idList.println(id);
-            output.println("      " + result);
-         } else {
-            output.println(line);
+            String arabicId = line.substring(line.indexOf(">") + 1, line.indexOf("</"));
+            String placeholder = input.nextLine();
+            while (!placeholder.contains("<td class=\"EN-cell\">")) {
+               placeholder = input.nextLine();
+            }
+            String arabicString = placeholder.substring(placeholder.indexOf(">") + 1, placeholder.indexOf("</"));
+            idToTrans.put(arabicId.substring(0, 7), arabicString);
          }
       }
+      return idToTrans;
    }
-	// method to replace (Scanner file, String replaceWith)
-	// find and replace
-	// insert before the string <a id = "string"> </a>
-	// keep a list of all the ids that we created
-   public static void replace(Scanner input, PrintStream links) {
+   
+	// Scans through input file to find IDs in links file. Adds tooltip code to each ID, and
+   // uses the given map to pair similar IDs and output the translation to the tooltip code.
+   // Outputs new edited file to given PrintStream.
+   // parameter(s) needed:
+   //    input        = the diary links document file scanner
+   //    links        = the printstream for output file (new edited version of code)
+   //    translations = map of IDs and its translations
+   public static void editDoc(Scanner input, PrintStream links, Map<String, String> translations) {
       while(input.hasNextLine()) {
          String line = input.nextLine();
-         String insert = "<a href = \"Diary_50_Arabic_EditsStandardized_20150917 (1).html#";
          if (line.contains("[A50_")) {
             //need to delete line and then insert above and reinsert below
             String id = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
-            String link = insert + id + "\">Link to Arabic</a>";
-            links.println(link);
-            links.println("<div class=\"tooltip\">");
-            links.println(line);
-            links.println("<span class=\"tooltiptext\">info text here</span>");
+            id = id.substring(0, 7);
+            if (translations.containsKey(id)) {
+               links.println("   <div class=\"tooltip\">");
+               links.println("   " + line);
+               links.println("      <span class=\"tooltiptext\">" + translations.get(id) + "</span>");
+               links.println("   </div>");
+            }
          } else {
             links.println(line);
          }
