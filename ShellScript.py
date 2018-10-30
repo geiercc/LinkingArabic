@@ -15,6 +15,8 @@ public class ShellScript {
       PrintStream links = new PrintStream("D50_links(3).html");
       Map<String, String> translations = createMap(arabicScanner);
       editDoc(diaryScanner, links, translations);
+      
+      // addImage(diaryScanner, links);
    }
    
    // Creates a map with the keys as the IDs of each translation, and the values as the English
@@ -33,7 +35,7 @@ public class ShellScript {
                placeholder = input.nextLine();
             }
             String arabicString = placeholder.substring(placeholder.indexOf(">") + 1, placeholder.indexOf("</"));
-            idToTrans.put(arabicId.substring(0, 7), arabicString);
+            idToTrans.put(arabicId.substring(0, 10), arabicString);
          }
       }
       return idToTrans;
@@ -52,7 +54,7 @@ public class ShellScript {
          if (line.contains("[A50_")) {
             //need to delete line and then insert above and reinsert below
             String id = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
-            id = id.substring(0, 7);
+            id = id.substring(0, 10);
             if (translations.containsKey(id)) {
                links.println("   <div class=\"tooltip\">");
                links.println("   " + line);
@@ -62,6 +64,15 @@ public class ShellScript {
          } else {
             links.println(line);
          }
+      }
+   }
+   
+   public static void addImage(Scanner diaryScanner, PrintStream links) {
+      for (int i = 1; i <= 426; i++) {
+         links.print("<img src=\"");
+         links.print("https://digitalcollections.lib.washington.edu/digital/api/singleitem/image/iraqdiaries/");
+         links.print(i);
+         links.println("/default.jpg?highlightTerms=\">");
       }
    }
 }
